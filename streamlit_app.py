@@ -34,4 +34,3 @@ The board notes another week of highly questionable decision making and thanks a
 """
 
     return report
-`
