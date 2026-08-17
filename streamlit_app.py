@@ -33,4 +33,3 @@ No Gameweek data available yet.
 The Positive Vibes Chairman will become active once
 Gameweek 1 has been completed.
 """)
-``
