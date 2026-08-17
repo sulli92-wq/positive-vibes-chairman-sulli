@@ -1,41 +1,26 @@
-def generate_report():
+import streamlit as st
+import requests
 
-    data = get_league_data()
+CLASSIC_LEAGUE_ID = 1099729
 
-    if not data:
-        return "Unable to retrieve league data."
+st.title("🎩 Positive Vibes Chairman")
+
+try:
+
+    url = f"https://fantasy.premierleague.com/api/leagues-classic/{CLASSIC_LEAGUE_ID}/standings/"
+
+    response = requests.get(url)
+    data = response.json()
+
+    st.success("Connected to FPL")
 
     standings = data["standings"]["results"]
 
-    if len(standings) == 0:
-        return "No standings data returned."
+    st.write(f"Found {len(standings)} managers")
 
-    winner = standings[0]
-    loser = standings[-1]
+    st.write("First manager record:")
 
-    winner_name = f"{winner['player_first_name']} {winner['player_last_name']}"
-    loser_name = f"{loser['player_first_name']} {loser['player_last_name']}"
+    st.json(standings[0])
 
-    report = f"""
-🎩 POSITIVE VIBES BOARD STATEMENT
-
-🏆 CHAIRMAN'S MEDAL
-
-{winner_name}
-
-Overall Rank: {winner['rank']}
-
-🥄 WOODEN SPOON
-
-{loser_name}
-
-Overall Rank: {loser['rank']}
-
-Fine Issued: £10
-
-Chairman's Verdict
-
-The board notes another week of highly questionable decision making and thanks all managers for their continued contribution to the fine pot.
-"""
-
-    return report
+except Exception as e:
+    st.error(str(e))
