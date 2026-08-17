@@ -1,10 +1,20 @@
 import streamlit as st
+import requests
 
-st.set_page_config(page_title="Positive Vibes Chairman")
+CLASSIC_LEAGUE_ID = 1099729
 
 st.title("🎩 Positive Vibes Chairman")
 
-st.success("App is working!")
+if st.button("Test FPL Connection"):
 
-if st.button("Test"):
-    st.write("Button works!")
+    url = f"https://fantasy.premierleague.com/api/leagues-classic/{CLASSIC_LEAGUE_ID}/standings/"
+
+    response = requests.get(url)
+
+    st.write("Status Code:", response.status_code)
+
+    if response.status_code == 200:
+        st.success("Connected to FPL!")
+        st.json(response.json())
+    else:
+        st.error("Could not connect.")
