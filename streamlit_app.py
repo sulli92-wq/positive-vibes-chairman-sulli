@@ -1,24 +1,3 @@
-import streamlit as st
-import requests
-import pandas as pd
-
-CLASSIC_LEAGUE_ID = 1099729
-
-st.set_page_config(
-    page_title="Positive Vibes Chairman",
-    page_icon="🎩"
-)
-
-def get_league_data():
-    url = f"https://fantasy.premierleague.com/api/leagues-classic/{CLASSIC_LEAGUE_ID}/standings/"
-    response = requests.get(url)
-
-    if response.status_code == 200:
-        return response.json()
-
-    return None
-
-
 def generate_report():
 
     data = get_league_data()
@@ -28,8 +7,11 @@ def generate_report():
 
     standings = data["standings"]["results"]
 
-    winner = max(standings, key=lambda x: x["event_total"])
-    loser = min(standings, key=lambda x: x["event_total"])
+    if len(standings) == 0:
+        return "No standings data returned."
+
+    winner = standings[0]
+    loser = standings[-1]
 
     report = f"""
 🎩 POSITIVE VIBES BOARD STATEMENT
@@ -37,16 +19,14 @@ def generate_report():
 🏆 CHAIRMAN'S MEDAL
 
 {winner['player_name']}
-{winner['event_total']} points
-
-The board congratulates this week's top performer.
+Overall Rank: {winner['rank']}
 
 🥄 WOODEN SPOON
 
 {loser['player_name']}
-{loser['event_total']} points
+Overall Rank: {loser['rank']}
 
-Fine issued: £10
+Fine Issued: £10
 
 Chairman's Verdict
 
@@ -54,18 +34,4 @@ The board notes another week of highly questionable decision making and thanks a
 """
 
     return report
-
-
-st.title("🎩 Positive Vibes Chairman")
-
-st.write("League ID: 1099729")
-
-if st.button("Generate Chairman Report"):
-
-    report = generate_report()
-
-    st.text_area(
-        "Copy into iMessage",
-        report,
-        height=500
-    )
+`
