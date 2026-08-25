@@ -185,3 +185,142 @@ def get_gameweek_options():
 # LEAGUE DATA
 # ------------------------------------------------
 st.success("Version 2 interface reached")
+try:
+    bootstrap = get_bootstrap_data()
+    events = bootstrap.get("events", [])
+
+    st.write("FPL gameweek status:")
+
+    event_rows = []
+
+    for event in events:
+        if event.get("id") == 1:
+            event_rows.append({
+                "Gameweek": event.get("id"),
+                "Finished": event.get("finished"),
+                "Data checked": event.get("data_checked"),
+                "Current": event.get("is_current"),
+                "Previous": event.get("is_previous"),
+                "Average score": event.get("average_entry_score"),
+            })
+
+    st.dataframe(
+        pd.DataFrame(event_rows),
+        use_container_width=True,
+        hide_index=True,
+    )
+
+    available_gameweeks = [
+        event["id"]
+        for event in events
+        if event.get("finished")
+        or event.get("data_checked")
+        or event.get("is_previous")
+    ]
+
+    available_gameweeks = sorted(
+        set(available_gameweeks),
+        reverse=True,
+    )
+
+    if not available_gameweeks:
+        st.warning(
+            "FPL has not marked any gameweek as finished yet. "
+            "Gameweek 1 can still be tested manually below."
+        )
+        available_gameweeks = [1]
+
+    selected_gameweek = st.selectbox(
+        "Choose gameweek",
+        options=available_gameweeks,
+        format_func=lambda gw: f"Gameweek {gw}",
+    )
+
+    if st.button(
+        "Generate Chairman's Report",
+        type="primary",
+        use_container_width=True,
+    ):
+        with st.spinner("Reviewing the gameweek..."):
+            result = generate_chairman_data(selected_gameweek)
+
+        st.success(
+            f"Gameweek {selected_gameweek} report generated."
+        )
+
+        st.subheader("Copy into iMessage")
+
+        st.text_area(
+            "Chairman's Report",
+            value=result["report"],
+            height=700,
+        )
+
+        st.subheader("Gameweek fines")
+
+        if result["fine_rows"]:
+            fine_table = pd.DataFrame(result["fine_rows"])
+
+            fine_table["Reasons"] = (
+                fine_table["Reasons"]
+                .apply(lambda reasons: "; ".join(reasons))
+            )
+
+            fine_table["Fine"] = (
+                fine_table["Fine"]
+                .apply(lambda value: f"£{value}")
+            )
+
+            st.dataframe(
+                fine_table,
+                use_container_width=True,
+                hide_index=True,
+            )
+        else:
+            st.info(
+                "No fines were calculated for this gameweek."
+            )
+
+        with st.expander("Full gameweek standings"):
+            standings_table = pd.DataFrame(
+                [
+                    {
+                        "Manager": row["manager"],
+                        "Team": row["team"],
+                        "GW Points": row["gw_points"],
+                        "Chip": row["chip_name"] or "None",
+                        "Overall Points": row["overall_points"],
+                        "League Rank": row["rank"],
+                    }
+                    for row in sorted(
+                        result["manager_rows"],
+                        key=lambda item: (
+                            -item["gw_points"],
+                            item["manager"],
+                        ),
+                    )
+                ]
+            )
+
+            st.dataframe(
+                standings_table,
+                use_container_width=True,
+                hide_index=True,
+            )
+
+        if result["h2h_error"]:
+            st.warning(
+                "The Classic League and chip checks worked, "
+                "but the H2H check failed. Technical detail: "
+                f"{result['h2h_error']}"
+            )
+
+        elif result["h2h_match_count"] == 0:
+            st.warning(
+                "No H2H fixtures were returned, so the "
+                "AVERAGE fine was not applied."
+            )
+
+except Exception as error:
+    st.error("The Version 2 interface encountered an error.")
+    st.exception(error)
