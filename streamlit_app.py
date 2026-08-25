@@ -184,3 +184,4 @@ def get_gameweek_options():
 # ---------------------------------------------------------
 # LEAGUE DATA
 # ------------------------------------------------
+st.success("Version 2 interface reached")
