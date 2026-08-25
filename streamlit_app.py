@@ -1,35 +1,20 @@
 import streamlit as st
+import requests
 
-st.set_page_config(
-    page_title="Positive Vibes Chairman",
-    page_icon="🎩"
-)
+CLASSIC_LEAGUE_ID = 1099729
 
 st.title("🎩 Positive Vibes Chairman")
 
-st.success("System operational")
+url = f"https://fantasy.premierleague.com/api/leagues-classic/{CLASSIC_LEAGUE_ID}/standings/"
 
-st.write("""
-League IDs configured:
+response = requests.get(url)
 
-✅ Classic League: 1099729
+st.write("Status Code:", response.status_code)
 
-✅ H2H League: 1128355
+data = response.json()
 
-Fine Rules:
+st.write("Top Level Keys:")
+st.write(list(data.keys()))
 
-🥄 Lowest Scorer = £10
-
-🎰 Chip Used & No GW Win = £5
-
-📊 Lose To AVERAGE = £10
-""")
-
-if st.button("Generate Report"):
-
-    st.info("""
-No Gameweek data available yet.
-
-The Positive Vibes Chairman will become active once
-Gameweek 1 has been completed.
-""")
+st.write("Full Response:")
+st.json(data)
